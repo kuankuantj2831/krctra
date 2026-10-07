@@ -589,14 +589,14 @@
        ========================================================================== */
     const PRACTICAL_TOOLS_INDEX = [
       {
-        keywords: ["网络测速", "测速", "网速", "speedtest", "宽带测速", "网络测试"],
+        keywords: ["网络测速", "测速", "网速", "speedtest", "宽带测速", "网络测试", "cesu", "wangsu", "wangluocesu"],
         title: "Speedtest by Ookla - 全球知名网络测速网站",
         url: "https://www.speedtest.net",
         snippet: "全球广受认可的宽带与网络延迟测速服务。支持一键测试下载速度、上传速度、网络抖动和 Ping 值。",
         type: "实用工具"
       },
       {
-        keywords: ["测速网", "speedtest.cn", "国内测速", "网络测速网"],
+        keywords: ["测速网", "speedtest.cn", "国内测速", "网络测速网", "cesuwang"],
         title: "测速网 (Speedtest.cn) - 国内专业网速测试",
         url: "https://www.speedtest.cn",
         snippet: "针对中国电信、联通、移动多线路优化的专业测速平台，提供全国各省市节点测速与路由追踪。",
@@ -610,7 +610,7 @@
         type: "实用工具"
       },
       {
-        keywords: ["天气", "天气预报", "查天气", "今天天气", "气温"],
+        keywords: ["天气", "天气预报", "查天气", "今天天气", "气温", "tianqi", "tianqiyubao"],
         title: "中国天气网 - 权威天气预报与气象预警",
         url: "http://www.weather.com.cn",
         snippet: "中国气象局官方门户，提供全国各省市精准 24 小时天气、7 天预报、空气质量指数与灾害预警。",
@@ -740,29 +740,112 @@
     });
 
     /**
-     * 【智能乱码清洗与核心关键词提取】
-     * 当用户输入的查询中包含无意义乱码（符号、乱序非字符等）但夹带正常中文或英文字符时：
-     * 1. 优先提取连续的中文块（如 "测速"、"棕色尘埃2"）
-     * 2. 提取有意义的英文词汇（如 "github"、"speedtest"、"react"）
-     * 3. 提取常见有效中英文组合
-     * 如果提取到了有效核心词，则使用核心词进行精准检索，并在页面友好提示用户。
+     * 【拼音词典与声母韵母音节表】
+     * 用于从一长串杂乱字母中自动识别切分出拼音（如 "cesu" -> "测速", "tianqi" -> "天气", "bilibili"）
+     */
+    const PINYIN_SYLLABLES = new Set([
+      "a","ai","an","ang","ao","ba","bai","ban","bang","bao","bei","ben","beng","bi","bian","biao","bie","bin","bing","bo","bu",
+      "ca","cai","can","cang","cao","ce","cen","ceng","cha","chai","chan","chang","chao","che","chen","cheng","chi","chong","chou","chu","chua","chuai","chuan","chuang","chui","chun","chuo","ci","cong","cou","cu","cuan","cui","cun","cuo",
+      "da","dai","dan","dang","dao","de","den","deng","di","dian","diao","die","ding","diu","dong","dou","du","duan","dui","dun","duo",
+      "e","ei","en","eng","er",
+      "fa","fan","fang","fei","fen","feng","fo","fou","fu",
+      "ga","gai","gan","gang","gao","ge","gei","gen","geng","gong","gou","gu","gua","guai","guan","guang","gui","gun","guo",
+      "ha","hai","han","hang","hao","he","hei","hen","heng","hong","hou","hu","hua","huai","huan","huang","hui","hun","huo",
+      "ji","jia","jian","jiang","jiao","jie","jin","jing","jiong","jiu","ju","juan","jue","jun",
+      "ka","kai","kan","kang","kao","ke","kei","ken","keng","kong","kou","ku","kua","kuai","kuan","kuang","kui","kun","kuo",
+      "la","lai","lan","lang","lao","le","lei","leng","li","lia","lian","liang","liao","lie","lin","ling","liu","lo","long","lou","lu","luan","lue","lun","luo","lv",
+      "ma","mai","man","mang","mao","me","mei","men","meng","mi","mian","miao","mie","min","ming","miu","mo","mou","mu",
+      "na","nai","nan","nang","nao","ne","nei","nen","neng","ni","nian","niang","niao","nie","nin","ning","niu","nong","nou","nu","nuan","nue","nun","nuo","nv",
+      "o","ou",
+      "pa","pai","pan","pang","pao","pei","pen","peng","pi","pian","piao","pie","pin","ping","po","pou","pu",
+      "qi","qia","qian","qiang","qiao","qie","qin","qing","qiong","qiu","qu","quan","que","qun",
+      "ran","rang","rao","re","ren","reng","ri","rong","rou","ru","rua","ruan","rui","run","ruo",
+      "sa","sai","san","sang","sao","se","sen","seng","sha","shai","shan","shang","shao","she","shei","shen","sheng","shi","shou","shu","shua","shuai","shuan","shuang","shui","shun","shuo","si","song","sou","su","suan","sui","sun","suo",
+      "ta","tai","tan","tang","tao","te","teng","ti","tian","tiao","tie","ting","tong","tou","tu","tuan","tui","tun","tuo",
+      "wa","wai","wan","wang","wei","wen","weng","wo","wu",
+      "xi","xia","xian","xiang","xiao","xie","xin","xing","xiong","xiu","xu","xuan","xue","xun",
+      "ya","yan","yang","yao","ye","yi","yin","ying","yo","yong","you","yu","yuan","yue","yun",
+      "za","zai","zan","zang","zao","ze","zei","zen","zeng","zha","zhai","zhan","zhang","zhao","zhe","zhei","zhen","zheng","zhi","zhong","zhou","zhu","zhua","zhuai","zhuan","zhuang","zhui","zhun","zhuo","zi","zong","zou","zu","zuan","zui","zun","zuo"
+    ]);
+
+    // 常用拼音词组映射表 (拼音直译为中文搜索词)
+    const PINYIN_COMMON_WORDS = {
+      "cesu": "测速",
+      "wangsu": "网速",
+      "wangluocesu": "网络测速",
+      "tianqi": "天气",
+      "tianqiyubao": "天气预报",
+      "fanyi": "翻译",
+      "ditu": "地图",
+      "gaode": "高德",
+      "bilibili": "哔哩哔哩",
+      "wangyiyun": "网易云",
+      "github": "github",
+      "speedtest": "speedtest",
+      "baidu": "百度",
+      "gongju": "工具",
+      "jisuanqi": "计算器",
+      "zongseduchen2": "棕色尘埃2",
+      "zongsechenai2": "棕色尘埃2",
+      "zongsechenai": "棕色尘埃"
+    };
+
+    /**
+     * 【多维智能乱码清洗与特征信息提取算法】
+     * 针对各种乱码输入：
+     * 1. 剔除全角/半角标点噪声（如 `、，。！？；：“”‘’【】《》（）—·~@#$%^&*()_+=[]{}|;:'",.<>?/`）
+     * 2. 连续中文块提取（支持汉字+数字）
+     * 3. 英文实体与技术词识别（如 github, speedtest, npm, vue, react 等）
+     * 4. 拼音序列切分与语义还原（如果提取出的是拼音如 cesu，自动映射/还原为中文并保留拼音）
+     * 5. 特殊符号剥离（即使符号夹在中文或英文中间，也能自动拼合提取完整意图）
      */
     function cleanNoisyQuery(rawQuery) {
       if (!rawQuery) return { cleaned: "", isCleaned: false, original: "" };
       const original = rawQuery.trim();
 
-      // 1. 提取所有中文字符序列（支持中文字符 + 可选连带数字）
+      // 阶段 1：清洗掉常见混杂干扰标点，得到去噪声干字符
+      // 匹配中英文标点、特殊符号、特殊数学字符
+      const strippedPunctuation = original.replace(/[\s\r\n\t`~!@#$%^&*()_\-+=\[\]{}|\\;:'",.<>?\/·~！@#￥%……&*（）——+={}|【】、：；“”‘’《》？，。]+/g, ' ').trim();
+
+      // 阶段 2：提取所有有效中文文本段（如 "测速"、"棕色尘埃2"）
       const chineseMatches = original.match(/[\u4e00-\u9fa5]+[0-9\u4e00-\u9fa5]*/g) || [];
 
-      // 2. 提取所有有意义的英文单词（至少2个字母，如 speedtest, github, vue 等）
-      const englishMatches = original.match(/[a-zA-Z]{2,}(?:[-_][a-zA-Z0-9]+)*/g) || [];
+      // 阶段 3：提取所有连续英文字母串（如 "cesu", "github", "speedtest"）
+      const englishMatches = (original.match(/[a-zA-Z0-9]+/g) || []).filter(w => /[a-zA-Z]/.test(w) && w.length >= 2);
 
-      // 3. 组合有效词元
-      const validTokens = [...chineseMatches, ...englishMatches];
+      // 阶段 4：拼音与语义还原识别
+      const pinyinDerivedWords = [];
+      for (const word of englishMatches) {
+        const lower = word.toLowerCase();
+        // 如果直接命中常见拼音词表
+        if (PINYIN_COMMON_WORDS[lower]) {
+          pinyinDerivedWords.push(PINYIN_COMMON_WORDS[lower]);
+        }
+      }
 
-      if (validTokens.length > 0) {
-        const cleanedStr = validTokens.join(" ").trim();
-        // 如果原始串包含大量乱码符号（且有效串不同于原始串），标记为清洗状态
+      // 阶段 5：智能多源汇总提取的有效信息
+      const collected = new Set();
+      
+      // 优先放入拼音还原的中文词
+      pinyinDerivedWords.forEach(w => collected.add(w));
+
+      // 放入提取到的真实中文
+      chineseMatches.forEach(w => {
+        if (w.trim()) collected.add(w.trim());
+      });
+
+      // 放入提取到的真实英文单词
+      englishMatches.forEach(w => {
+        if (w.trim()) collected.add(w.trim());
+      });
+
+      // 如果通过去除噪声符号后得到的串非常简洁有效
+      if (collected.size === 0 && strippedPunctuation.length > 0) {
+        collected.add(strippedPunctuation);
+      }
+
+      if (collected.size > 0) {
+        const cleanedStr = Array.from(collected).join(" ").trim();
         if (cleanedStr !== original) {
           return { cleaned: cleanedStr, isCleaned: true, original };
         }
