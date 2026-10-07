@@ -141,29 +141,30 @@ async function fetchDuckDuckGoHtml(query) {
     const html = await resp.text();
     const results = [];
 
-    // 匹配 DDG 条目: class="result results_links results_links_deep web-result"
-    const blockRegex = /<div class="result\s+results_links[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/gi;
+    // 匹配包含 result__snippet 的结果条目块
+    const blockRegex = /<div\s+class="result\s+results_links[^>]*>([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/gi;
     let match;
 
-    while ((match = blockRegex.exec(html)) !== null && results.length < 8) {
-      const block = match[0];
+    while ((match = blockRegex.exec(html)) !== null && results.length < 10) {
+      const block = match[1];
 
-      // 标题与链接: class="result__a"
-      const aMatch = /<a class="result__a"\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
+      // 提取标题与链接: class="result__a"
+      const aMatch = /<a\s+class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
       if (!aMatch) continue;
 
       let href = aMatch[1];
-      // DDG 有时会包装跳转: //duckduckgo.com/l/?uddg=真实网址
       if (href.includes('uddg=')) {
-        const decoded = decodeURIComponent(href.split('uddg=')[1].split('&')[0]);
-        if (decoded) href = decoded;
+        try {
+          const decoded = decodeURIComponent(href.split('uddg=')[1].split('&')[0]);
+          if (decoded.startsWith('http')) href = decoded;
+        } catch (e) {}
       }
 
       const title = cleanHtml(aMatch[2]);
 
-      // 摘要: class="result__snippet"
+      // 提取摘要: class="result__snippet"
       let snippet = '';
-      const snipMatch = /<a class="result__snippet"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
+      const snipMatch = /<a\s+class="result__snippet"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
       if (snipMatch) {
         snippet = cleanHtml(snipMatch[1]);
       }
@@ -172,9 +173,9 @@ async function fetchDuckDuckGoHtml(query) {
         results.push({
           id: `ddg-${Math.random()}`,
           title: title,
-          snippet: snippet || '无详细摘要',
+          snippet: snippet || '网页详情',
           url: href,
-          source: 'DuckDuckGo 网页'
+          source: 'DuckDuckGo 全网网页'
         });
       }
     }
