@@ -753,11 +753,50 @@
         // 3. 渲染
         renderResults(scoredResults, query);
 
+        // 同步 URL 参数（如 ?q=关键词），刷新网页或复制链接时依然保留搜索结果！
+        syncUrlParam(query);
+
       } catch (error) {
         console.error("搜索出错:", error);
         statusMsg.textContent = "检索过程中遇到异常，请检查网络后重试。";
       }
     }
+
+    /**
+     * 同步当前搜索词到浏览器地址栏（支持刷新不丢失、前进后退）
+     */
+    function syncUrlParam(query) {
+      const currentUrl = new URL(window.location.href);
+      if (currentUrl.searchParams.get("q") !== query) {
+        currentUrl.searchParams.set("q", query);
+        window.history.pushState({ query }, "", currentUrl.toString());
+      }
+      document.title = `${query} - Krctra 搜索`;
+    }
+
+    // 页面加载或刷新时：自动读取 URL 参数中的 ?q= 并执行搜索
+    window.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search);
+      const initialQuery = params.get("q");
+      if (initialQuery && initialQuery.trim()) {
+        searchInputElem.value = initialQuery.trim();
+        handleSearch(new Event("submit"));
+      }
+    });
+
+    // 浏览器前进/后退时：同步搜索状态
+    window.addEventListener("popstate", (e) => {
+      const params = new URLSearchParams(window.location.search);
+      const query = params.get("q") || "";
+      searchInputElem.value = query;
+      if (query.trim()) {
+        handleSearch(new Event("submit"));
+      } else {
+        document.getElementById("resultsContainer").innerHTML = "";
+        document.getElementById("statusMsg").textContent = "";
+        document.title = "Krctra - 极简纯净搜索引擎";
+      }
+    });
 
     /**
      * 【按用户勾选动态调用搜索源】
