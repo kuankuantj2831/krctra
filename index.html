@@ -1235,8 +1235,9 @@
         } catch (e) {}
 
         // 6. 百科类词条若只是泛泛而谈，轻微降权（避免百科压制具体工具）
-        if (item.source.includes("维基百科") && !item.isDirectTool) {
-          score -= 15;
+        // 7. 对搜索引擎外部结果给予保底相关分（如果标题或摘要命中分词），保证有意义
+        if (item.source.includes("Bing") && score > 0) {
+          score += 20;
         }
 
         return {
@@ -1245,8 +1246,10 @@
         };
       });
 
-      // 从高到低排序
-      return scored.sort((a, b) => b.score - a.score);
+      // 从高到低排序，并彻底过滤掉相关度为 0 的无关结果！
+      return scored
+        .filter(item => item.score > 0)
+        .sort((a, b) => b.score - a.score);
     }
 
     function escapeRegExp(string) {
