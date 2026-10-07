@@ -85,18 +85,8 @@ async function fetchBing(query) {
       let rawHref = linkMatch[1];
       const rawTitle = cleanHtml(linkMatch[2]);
 
-      // 处理 Bing 的重定向链接: /ck/a?!&&p=...&u=a1aHR0cHM6Ly9...
-      if (rawHref.includes('&u=')) {
-        try {
-          const uParam = rawHref.split('&u=')[1].split('&')[0];
-          // u 参数是以 a1 开头的 Base64 编码 (a1 + base64(url))
-          const b64 = uParam.startsWith('a1') ? uParam.slice(2) : uParam;
-          const decoded = atob(b64);
-          if (decoded.startsWith('http')) {
-            rawHref = decoded;
-          }
-        } catch (err) {}
-      }
+      // 解密 Bing 跟踪加密链接: https://www.bing.com/ck/a?!&&p=...&u=a1aHR0cHM6Ly9...
+      rawHref = decodeBingUrl(rawHref);
 
       // 提取摘要: 寻找 class 包含 b_caption 或 <p> 标签
       let rawSnippet = '';
@@ -200,4 +190,33 @@ function cleanHtml(str) {
     .replace(/&#39;/g, "'")
     .replace(/&nbsp;/g, ' ')
     .trim();
+}
+
+/**
+ * 辅助函数：解密 Bing 的点击重定向加密跟踪链接
+ * 形式：https://www.bing.com/ck/a?!&&p=...&u=a1aHR0cHM6Ly9hcHBzLmFwcGxlLmNvbS91cw...&ntb=1
+ * 原理：参数 u 去掉前缀 a1 后是标准的 Base64 编码真实目标网址
+ */
+function decodeBingUrl(url) {
+  if (!url) return '';
+  const unescaped = url.replace(/&amp;/g, '&');
+  if (unescaped.includes('&u=')) {
+    try {
+      let uParam = unescaped.split('&u=')[1].split('&')[0];
+      if (uParam.startsWith('a1')) {
+        uParam = uParam.slice(2);
+      }
+      // 补齐 Base64 padding
+      while (uParam.length % 4 !== 0) {
+        uParam += '=';
+      }
+      const decoded = atob(uParam);
+      if (decoded.startsWith('http')) {
+        return decoded;
+      }
+    } catch (e) {
+      // 容错降级
+    }
+  }
+  return url;
 }
