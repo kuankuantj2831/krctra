@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Krctra - 极简纯净搜索引擎</title>
+  <style>
+    /* ----------------------------------------------------
+       1. 全局与主题样式：流光动态渐变背景、现代字体
+       ---------------------------------------------------- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 35%, #311042 70%, #0f172a 100%);
+      background-size: 300% 300%;
+      animation: gradientBG 15s ease infinite;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px 20px;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* ----------------------------------------------------
+       2. 标题 Logo 设计：发光与渐变字色
+       ---------------------------------------------------- */
+    .header {
+      text-align: center;
+      margin-top: 30px;
+      margin-bottom: 24px;
+    }
+
+    .brand-title {
+      font-size: 3.8rem;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      background: linear-gradient(120deg, #60a5fa, #c084fc, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 35px rgba(192, 132, 252, 0.35);
+      user-select: none;
+      cursor: default;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .brand-title:hover {
+      transform: scale(1.04);
+    }
+
+    .brand-subtitle {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      margin-top: 6px;
+      letter-spacing: 1px;
+    }
+
+    /* ----------------------------------------------------
+       3. 搜索栏设计：毛玻璃效果与聚焦呼吸动画
+       ---------------------------------------------------- */
+    .search-container {
+      width: 100%;
+      max-width: 720px;
+      position: relative;
+      margin-bottom: 14px;
+    }
+
+    .search-box {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      border-radius: 9999px;
+      padding: 6px 10px 6px 22px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3),
+                  inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .search-box:focus-within {
+      background: rgba(255, 255, 255, 0.13);
+      border-color: rgba(192, 132, 252, 0.7);
+      box-shadow: 0 15px 35px -5px rgba(168, 85, 247, 0.3),
+                  0 0 0 4px rgba(168, 85, 247, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 1.1rem;
+      color: #ffffff;
+      padding: 10px 8px;
+    }
+
+    .search-input::placeholder {
+      color: #64748b;
+    }
+
+    .search-btn {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border: none;
+      outline: none;
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 9999px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+    }
+
+    .search-btn:hover {
+      transform: scale(1.04);
+      box-shadow: 0 6px 18px rgba(147, 51, 234, 0.5);
+    }
+
+    .search-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* ----------------------------------------------------
+       用户控制中心：搜索源开关与偏好设置 (完全听用户的)
+       ---------------------------------------------------- */
+    .control-panel {
+      width: 100%;
+      max-width: 720px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 12px 18px;
+      margin-bottom: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .control-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      font-weight: 600;
+      margin-right: 2px;
+    }
+
+    .source-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.82rem;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .source-toggle:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .source-toggle input[type="checkbox"] {
+      cursor: pointer;
+      accent-color: #a855f7;
+    }
+
+    .quick-engines {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .engine-btn {
+      background: rgba(99, 102, 241, 0.18);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #c7d2fe;
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .engine-btn:hover {
+      background: rgba(99, 102, 241, 0.35);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    /* ----------------------------------------------------
+       4. 提示与状态信息
+       ---------------------------------------------------- */
+    .status-msg {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.95rem;
+      min-height: 24px;
+      margin-bottom: 20px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #c084fc;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ----------------------------------------------------
+       5. 搜索结果卡片及淡入动画
+       ---------------------------------------------------- */
+    .results-container {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .result-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      opacity: 0;
+      transform: translateY(18px);
+      animation: fadeInCard 0.45s ease forwards;
+      transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    }
+
+    .result-card.tool-direct {
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .result-card:hover {
+      transform: translateY(-3px);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(168, 85, 247, 0.35);
+      box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.25);
+    }
+
+    @keyframes fadeInCard {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .badge-source {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(99, 102, 241, 0.25);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.35);
+    }
+
+    .badge-source.badge-direct {
+      background: rgba(16, 185, 129, 0.25);
+      color: #6ee7b7;
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .badge-score {
+      font-size: 0.75rem;
+      color: #34d399;
+      background: rgba(52, 211, 153, 0.15);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .result-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .result-title a {
+      color: #67e8f9;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .result-title a:hover {
+      color: #a5f3fc;
+      text-decoration: underline;
+    }
+
+    .result-url {
+      font-size: 0.8rem;
+      color: #10b981;
+      margin-bottom: 6px;
+      word-break: break-all;
+    }
+
+    .result-snippet {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+
+    .result-snippet mark {
+      background-color: rgba(244, 114, 182, 0.3);
+      color: #fbcfe8;
+      border-radius: 2px;
+      padding: 1px 3px;
+    }
+
+    .footer {
+      margin-top: auto;
+      padding-top: 50px;
+      font-size: 0.85rem;
+      color: #64748b;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 网页主体顶部：搜索名称与标语 -->
+  <header class="header">
+    <div class="brand-title">Krctra</div>
+    <div class="brand-subtitle">自主权由你掌控 · 多源融合 · 实用网址直达</div>
+  </header>
+
+  <!-- 搜索框容器 -->
+  <div class="search-container">
+    <form class="search-box" id="searchForm" onsubmit="handleSearch(event)">
+      <input 
+        type="text" 
+        id="searchInput" 
+        class="search-input" 
+        placeholder="输入关键词，例如：网络测速、天气查询、Python..." 
+        autocomplete="off" 
+        autofocus
+      />
+      <button type="submit" class="search-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span>搜索</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- 用户控制面板：由用户自主勾选启用哪些搜索引擎源，绝不替用户做主 -->
+  <div class="control-panel">
+    <div class="control-group">
+      <span class="control-label">搜索源控制:</span>
+      <label class="source-toggle" title="通过云端代理抓取真实必应全网结果，搜网络测速可直接出 speedtest 真实网页">
+        <input type="checkbox" id="srcBing" checked> 必应全网网页 (Bing)
+      </label>
+      <label class="source-toggle" title="搜常用在线工具与实用直达网站">
+        <input type="checkbox" id="srcTools" checked> 实用网址/在线工具
+      </label>
+      <label class="source-toggle" title="DuckDuckGo 即时检索与官网直达">
+        <input type="checkbox" id="srcDDG" checked> DuckDuckGo
+      </label>
+      <label class="source-toggle" title="全球数字出版物与学术期刊">
+        <input type="checkbox" id="srcCrossref" checked> 全球出版物 (Crossref)
+      </label>
+      <label class="source-toggle" title="全球前端与开发者生态库">
+        <input type="checkbox" id="srcWebDev" checked> 开发者库 (NPM/Web)
+      </label>
+      <label class="source-toggle" title="维基百科：如果你不需要百科，随时可以取消勾选">
+        <input type="checkbox" id="srcWiki"> 维基百科 (默认已关闭)
+      </label>
+      <label class="source-toggle" title="OpenLibrary 图书文献库">
+        <input type="checkbox" id="srcOpenLib"> 图书文献库
+      </label>
+    </div>
+
+    <!-- 快捷全网搜索跳转：一键将你的关键词带到各大引擎 -->
+    <div class="control-group">
+      <span class="control-label">全网直达:</span>
+      <div class="quick-engines">
+        <a class="engine-btn" id="linkBaidu" target="_blank" href="https://www.baidu.com">百度</a>
+        <a class="engine-btn" id="linkBing" target="_blank" href="https://www.bing.com">Bing</a>
+        <a class="engine-btn" id="linkDDG" target="_blank" href="https://duckduckgo.com">DDG</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 状态信息提示（加载中/错误提示/结果条数） -->
+  <div class="status-msg" id="statusMsg"></div>
+
+  <!-- 搜索结果列表容器 -->
+  <main class="results-container" id="resultsContainer"></main>
+
+  <!-- 页脚信息 -->
+  <footer class="footer">
+    Krctra Search Engine · 专属于你的私密探索器 · 每一个搜索源均由你控制
+  </footer>
+
+  <script>
+    /* ==========================================================================
+       【实用在线工具/知名网站直达数据库】
+       当用户搜索具体功能（如“网络测速”、“天气查询”、“翻译”、“计算器”等）时，
+       精准返回用户真正需要的工具网站，而不是百科长文。
+       ========================================================================== */
+    const PRACTICAL_TOOLS_INDEX = [
+      {
+        keywords: ["网络测速", "测速", "网速", "speedtest", "宽带测速", "网络测试"],
+        title: "Speedtest by Ookla - 全球知名网络测速网站",
+        url: "https://www.speedtest.net",
+        snippet: "全球广受认可的宽带与网络延迟测速服务。支持一键测试下载速度、上传速度、网络抖动和 Ping 值。",
+        type: "实用工具"
+      },
+      {
+        keywords: ["测速网", "speedtest.cn", "国内测速", "网络测速网"],
+        title: "测速网 (Speedtest.cn) - 国内专业网速测试",
+        url: "https://www.speedtest.cn",
+        snippet: "针对中国电信、联通、移动多线路优化的专业测速平台，提供全国各省市节点测速与路由追踪。",
+        type: "实用工具"
+      },
+      {
+        keywords: ["fast", "netflix测速", "网速测试", "极简测速"],
+        title: "Fast.com - 奈飞出品的极简网速测试",
+        url: "https://fast.com",
+        snippet: "由 Netflix 提供的极简全屏网络测速工具，打开网页即刻自动测试下载速度，纯净无广告。",
+        type: "实用工具"
+      },
+      {
+        keywords: ["天气", "天气预报", "查天气", "今天天气", "气温"],
+        title: "中国天气网 - 权威天气预报与气象预警",
+        url: "http://www.weather.com.cn",
+        snippet: "中国气象局官方门户，提供全国各省市精准 24 小时天气、7 天预报、空气质量指数与灾害预警。",
+        type: "生活实用"
+      },
+      {
+        keywords: ["翻译", "在线翻译", "英翻中", "中翻英", "translate"],
+        title: "DeepL Translate - 高精准度 AI 神经网络翻译",
+        url: "https://www.deepl.com/translator",
+        snippet: "全球知名的高准确度翻译工具，支持中英法德西日等多语种，语调自然、准确度极高。",
+        type: "效率工具"
+      },
+      {
+        keywords: ["百度翻译", "在线翻译", "翻译器"],
+        title: "百度翻译 - 多语种即时互译",
+        url: "https://fanyi.baidu.com",
+        snippet: "支持 200+ 语言互译，支持文档翻译、图片翻译与海量权威双语例句。",
+        type: "效率工具"
+      },
+      {
+        keywords: ["地图", "查路线", "导航", "高德地图", "公交路线"],
+        title: "高德地图 - 专业的数字地图与导航路线规划",
+        url: "https://www.amap.com",
+        snippet: "提供全国精准地点检索、驾车公交步行骑行路线规划、路况实时监测与实景查看。",
+        type: "出行服务"
+      },
+      {
+        keywords: ["github", "开源代码", "代码库", "程序员"],
+        title: "GitHub - 全球开发者开源与项目托管平台",
+        url: "https://github.com",
+        snippet: "全球最大的代码托管与开源协作平台，汇聚全球数千万开源项目与开发者资源。",
+        type: "开发社区"
+      },
+      {
+        keywords: ["哔哩哔哩", "bilibili", "b站", "看视频", "动漫视频"],
+        title: "哔哩哔哩 (bilibili) - 国内知名视频社区与弹幕网",
+        url: "https://www.bilibili.com",
+        snippet: "国内热门的年轻人文化社区，涵盖科技、学习、动画、游戏、音乐等海量高画质原创视频。",
+        type: "影音娱乐"
+      },
+      {
+        keywords: ["网易云音乐", "听歌", "音乐播放器", "在线听歌"],
+        title: "网易云音乐 - 发现好音乐",
+        url: "https://music.163.com",
+        snippet: "海量正版曲库、精选歌单、千万音乐评论社区，让听歌更有温度。",
+        type: "影音娱乐"
+      }
+    ];
+
+    // 同步更新全网直达链接
+    const searchInputElem = document.getElementById("searchInput");
+    searchInputElem.addEventListener("input", () => {
+      const q = encodeURIComponent(searchInputElem.value.trim());
+      document.getElementById("linkBaidu").href = q ? `https://www.baidu.com/s?wd=${q}` : "https://www.baidu.com";
+      document.getElementById("linkBing").href = q ? `https://www.bing.com/search?q=${q}` : "https://www.bing.com";
+      document.getElementById("linkDDG").href = q ? `https://duckduckgo.com/?q=${q}` : "https://duckduckgo.com";
+    });
+
+    /**
+     * 【主搜索逻辑】
+     * 严格遵守用户的开关设置，绝不强制调用用户不想看到的源！
+     */
+    async function handleSearch(event) {
+      event.preventDefault();
+
+      const query = searchInputElem.value.trim();
+      const statusMsg = document.getElementById("statusMsg");
+      const resultsContainer = document.getElementById("resultsContainer");
+
+      if (!query) {
+        statusMsg.textContent = "请输入你想搜索的内容哦！";
+        resultsContainer.innerHTML = "";
+        return;
+      }
+
+      // 获取用户的开关配置
+      const userSettings = {
+        bing: document.getElementById("srcBing") ? document.getElementById("srcBing").checked : true,
+        tools: document.getElementById("srcTools").checked,
+        ddg: document.getElementById("srcDDG").checked,
+        crossref: document.getElementById("srcCrossref").checked,
+        webDev: document.getElementById("srcWebDev").checked,
+        wiki: document.getElementById("srcWiki").checked,
+        openLib: document.getElementById("srcOpenLib").checked,
+      };
+
+      // 检查用户是否全部关掉了
+      const activeSourceCount = Object.values(userSettings).filter(Boolean).length;
+      if (activeSourceCount === 0) {
+        statusMsg.textContent = "你关闭了所有搜索源哦！请在上方勾选至少一个你想启用的搜索源。";
+        resultsContainer.innerHTML = "";
+        return;
+      }
+
+      statusMsg.innerHTML = '<span class="spinner"></span>Krctra 正在根据你的配置并发检索各个指定源...';
+      resultsContainer.innerHTML = "";
+
+      try {
+        // 根据用户的设置，动态决定拉取哪些源
+        const allFetchedResults = await fetchByUserPreference(query, userSettings);
+
+        if (!allFetchedResults || allFetchedResults.length === 0) {
+          statusMsg.textContent = `在已开启的源中未检索到关于 "${query}" 的结果。可以尝试勾选更多搜索源，或使用上方“全网直达”跳转。`;
+          return;
+        }
+
+        // 1. 去重
+        const uniqueResults = deduplicateResults(allFetchedResults);
+
+        // 2. 升级版双层打分与语义重排（意图识别 + BM25 词频加权 + 域名权威度）
+        const scoredResults = advancedRankResults(uniqueResults, query);
+
+        // 统计来源种类
+        const sourceSet = new Set(scoredResults.map(r => r.source));
+        statusMsg.textContent = `共呈现 ${scoredResults.length} 条精选结果（汇聚自：${Array.from(sourceSet).join('、')}），已按相关度重排：`;
+
+        // 3. 渲染
+        renderResults(scoredResults, query);
+
+      } catch (error) {
+        console.error("搜索出错:", error);
+        statusMsg.textContent = "检索过程中遇到异常，请检查网络后重试。";
+      }
+    }
+
+    /**
+     * 【按用户勾选动态调用搜索源】
+     */
+    async function fetchByUserPreference(query, settings) {
+      const tasks = [];
+
+      // 0. 必应全网真实爬虫 (通过 Cloudflare Functions /api/search 云端代理抓取)
+      if (settings.bing) {
+        tasks.push(fetchCloudflareBing(query));
+      }
+
+      // 1. 实用网址与工具直达 (用户开启才调)
+      if (settings.tools) {
+        tasks.push(searchPracticalTools(query));
+      }
+
+      // 2. DuckDuckGo 即时网页与官网 (用户开启才调)
+      if (settings.ddg) {
+        tasks.push(fetchDuckDuckGo(query));
+      }
+
+      // 3. Crossref 全球数字出版物 (用户开启才调)
+      if (settings.crossref) {
+        tasks.push(fetchCrossref(query));
+      }
+
+      // 4. WebDev 全球生态库 (用户开启才调)
+      if (settings.webDev) {
+        tasks.push(fetchNpmRegistry(query));
+      }
+
+      // 5. 维基百科 (用户开启才调，若关闭则坚决不调)
+      if (settings.wiki) {
+        tasks.push(fetchWikipedia(query));
+      }
+
+      // 6. OpenLibrary (用户开启才调)
+      if (settings.openLib) {
+        tasks.push(fetchOpenLibrary(query));
+      }
+
+      const settled = await Promise.allSettled(tasks);
+      let combined = [];
+
+      for (const res of settled) {
+        if (res.status === "fulfilled" && Array.isArray(res.value)) {
+          combined = combined.concat(res.value);
+        }
+      }
+
+      return combined;
+    }
+
+    /**
+     * 【源 0：Cloudflare 边缘代理必应搜索】
+     * 部署上线到 Cloudflare Pages 后，通过同域 /api/search 获取真实必应全网结果
+     */
+    async function fetchCloudflareBing(query) {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&engine=bing`, {
+          headers: { "Accept": "application/json" }
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data.results) ? data.results : [];
+      } catch (e) {
+        // 本地单文件直接打开时由于没有运行 /api，优雅跳过
+        return [];
+      }
+    }
+
+    /**
+     * 【源 1：实用网址与工具库检索】
+     */
+    function searchPracticalTools(query) {
+      const q = query.toLowerCase().trim();
+      const matched = [];
+
+      for (const item of PRACTICAL_TOOLS_INDEX) {
+        let isHit = false;
+        // 关键词命中
+        for (const kw of item.keywords) {
+          if (q.includes(kw) || kw.includes(q)) {
+            isHit = true;
+            break;
+          }
+        }
+        if (isHit || item.title.toLowerCase().includes(q)) {
+          matched.push({
+            id: `tool-${Math.random()}`,
+            title: item.title,
+            snippet: item.snippet,
+            url: item.url,
+            source: "实用网址直达",
+            isDirectTool: true
+          });
+        }
+      }
+      return Promise.resolve(matched);
+    }
+
+    /**
+     * 【源 2：DuckDuckGo 官网与即时回答】
+     */
+    async function fetchDuckDuckGo(query) {
+      try {
+        const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=0`;
+        const res = await fetch(url, { headers: { "Accept": "application/json" } });
+        if (!res.ok) return [];
+
+        const data = await res.json();
+        const results = [];
+
+        if (data.Heading && (data.AbstractURL || data.AbstractText)) {
+          results.push({
+            id: `ddg-main-${Date.now()}`,
+            title: data.Heading,
+            snippet: data.AbstractText || `${data.Heading} 官方主页及详细说明`,
+            url: data.AbstractURL || (data.Results && data.Results[0] ? data.Results[0].FirstURL : `https://duckduckgo.com/?q=${encodeURIComponent(query)}`),
+            source: "DuckDuckGo 官网直达"
+          });
+        }
+
+        if (Array.isArray(data.Results)) {
+          for (const item of data.Results) {
+            if (item.FirstURL && item.Text) {
+              results.push({
+                id: `ddg-res-${Math.random()}`,
+                title: item.Text.split(' - ')[0] || item.Text,
+                snippet: item.Text,
+                url: item.FirstURL,
+                source: "DuckDuckGo 网页"
+              });
+            }
+          }
+        }
+
+        if (Array.isArray(data.RelatedTopics)) {
+          for (const item of data.RelatedTopics) {
+            if (item.FirstURL && item.Text) {
+              results.push({
+                id: `ddg-topic-${Math.random()}`,
+                title: item.Text.split(' - ')[0].slice(0, 50),
+                snippet: item.Text,
+                url: item.FirstURL,
+                source: "DuckDuckGo 网页"
+              });
+            } else if (Array.isArray(item.Topics)) {
+              for (const subItem of item.Topics.slice(0, 3)) {
+                if (subItem.FirstURL && subItem.Text) {
+                  results.push({
+                    id: `ddg-subtopic-${Math.random()}`,
+                    title: subItem.Text.split(' - ')[0].slice(0, 50),
+                    snippet: subItem.Text,
+                    url: subItem.FirstURL,
+                    source: "DuckDuckGo 网页"
+                  });
+                }
+              }
+            }
+          }
+        }
+
+        return results.slice(0, 6);
+      } catch (e) {
+        return [];
+      }
+    }
+
+    /**
+     * 【源 3：Crossref 国际开放数字出版网络】
+     */
+    async function fetchCrossref(query) {
+      try {
+        const endpoint = `https://api.crossref.org/works?query=${encodeURIComponent(query)}&rows=5`;
+        const res = await fetch(endpoint, { headers: { "Accept": "application/json" } });
+        if (!res.ok) return [];
+
+        const data = await res.json();
+        const items = data.message && Array.isArray(data.message.items) ? data.message.items : [];
+
+        return items.map((item, idx) => {
+          const rawTitle = Array.isArray(item.title) ? item.title[0] : (item.title || "学术出版物");
+          const container = Array.isArray(item['container-title']) ? item['container-title'][0] : (item['container-title'] || "");
+          const publisher = item.publisher ? `来源: ${item.publisher}` : "";
+          const link = (item.resource && item.resource.primary && item.resource.primary.URL) || item.URL || `https://doi.org/${item.DOI}`;
+
+          return {
+            id: `crossref-${idx}-${Date.now()}`,
+            title: rawTitle,
+            snippet: [container, publisher, item.abstract ? item.abstract.replace(/<[^>]+>/g, '').slice(0, 160) : ""].filter(Boolean).join(" · ") || "出版文献与网页详情",
+            url: link,
+            source: "Crossref 全球出版物"
+          };
+        });
+      } catch (e) {
+        return [];
+      }
+    }
+
+    /**
+     * 【源 4：NPM 全球开发者生态与工具库 (自带 CORS，免 key)】
+     */
+    async function fetchNpmRegistry(query) {
+      try {
+        const url = `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=5`;
+        const res = await fetch(url, { headers: { "Accept": "application/json" } });
+        if (!res.ok) return [];
+
+        const data = await res.json();
+        const objects = Array.isArray(data.objects) ? data.objects : [];
+
+        return objects.map(obj => {
+          const pkg = obj.package || {};
+          const links = pkg.links || {};
+          return {
+            id: `npm-${pkg.name}-${Math.random()}`,
+            title: `${pkg.name} - 开发者工具/软件包`,
+            snippet: pkg.description || "开源工具与网页 SDK，可直接在线查看文档与使用。",
+            url: links.homepage || links.npm || `https://www.npmjs.com/package/${pkg.name}`,
+            source: "开发者网络 (NPM)"
+          };
+        });
+      } catch (e) {
+        return [];
+      }
+    }
+
+    /**
+     * 【源 5：维基百科 (仅当用户勾选时才调用)】
+     */
+    async function fetchWikipedia(query) {
+      try {
+        const endpoint = `https://zh.wikipedia.org/w/rest.php/v1/search/page?q=${encodeURIComponent(query)}&limit=5`;
+        const res = await fetch(endpoint, { headers: { "Accept": "application/json" } });
+        if (!res.ok) return [];
+
+        const data = await res.json();
+        return (data.pages || []).map(page => ({
+          id: `wiki-${page.id}`,
+          title: page.title,
+          snippet: page.description || (page.excerpt ? page.excerpt.replace(/<[^>]+>/g, '') : "维基百科词条"),
+          url: `https://zh.wikipedia.org/wiki/${encodeURIComponent(page.key || page.title)}`,
+          source: "维基百科"
+        }));
+      } catch (e) {
+        return [];
+      }
+    }
+
+    /**
+     * 【源 6：OpenLibrary 开放文献库】
+     */
+    async function fetchOpenLibrary(query) {
+      try {
+        const endpoint = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=3`;
+        const res = await fetch(endpoint, { headers: { "Accept": "application/json" } });
+        if (!res.ok) return [];
+
+        const data = await res.json();
+        const docs = Array.isArray(data.docs) ? data.docs : [];
+
+        return docs.map((doc, idx) => {
+          const author = Array.isArray(doc.author_name) ? doc.author_name.join(", ") : "公开书籍";
+          const pageUrl = doc.key ? `https://openlibrary.org${doc.key}` : `https://openlibrary.org/search?q=${encodeURIComponent(query)}`;
+
+          return {
+            id: `openlibrary-${idx}-${Date.now()}`,
+            title: doc.title || "开放著作",
+            snippet: `作者: ${author}。全球开放数字化档案馆网络藏书。`,
+            url: pageUrl,
+            source: "OpenLibrary"
+          };
+        });
+      } catch (e) {
+        return [];
+      }
+    }
+
+    /**
+     * 【结果去重】
+     */
+    function deduplicateResults(results) {
+      const seenUrls = new Set();
+      const seenTitles = new Set();
+      const deduplicated = [];
+
+      for (const item of results) {
+        if (!item.url || !item.title) continue;
+        const normUrl = item.url.toLowerCase().replace(/\/+$/, "");
+        const normTitle = item.title.trim().toLowerCase();
+
+        if (seenUrls.has(normUrl) || seenTitles.has(normTitle)) {
+          continue;
+        }
+
+        seenUrls.add(normUrl);
+        seenTitles.add(normTitle);
+        deduplicated.push(item);
+      }
+
+      return deduplicated;
+    }
+
+    /**
+     * 【升级版精准重排序算法】
+     * 解决“只要相关工具，不要无关长文”的问题：
+     * 1. 工具直达意图加权（isDirectTool 极大提权）
+     * 2. 标题包含/等于核心词的最高优先级
+     * 3. 惩罚长标题与冗余描述（降权纯理论词条）
+     */
+    function advancedRankResults(results, query) {
+      const lowerQuery = query.toLowerCase().trim();
+      const queryTokens = lowerQuery.split(/\s+/).filter(t => t.length > 0);
+
+      const scored = results.map(item => {
+        let score = 0;
+        const titleLower = item.title.toLowerCase();
+        const snippetLower = item.snippet.toLowerCase();
+
+        // 1. 意图命中：如果这是用户要找的实用网站/直达工具，赋予特权基础分
+        if (item.isDirectTool) {
+          score += 300;
+        }
+
+        // 2. 标题匹配度核心权重
+        if (titleLower === lowerQuery) {
+          score += 200;
+        } else if (titleLower.startsWith(lowerQuery)) {
+          score += 120;
+        } else if (titleLower.includes(lowerQuery)) {
+          score += 80;
+        }
+
+        // 3. 多词分词覆盖度计算
+        if (queryTokens.length > 1) {
+          let tokenHits = 0;
+          for (const token of queryTokens) {
+            if (titleLower.includes(token)) tokenHits++;
+          }
+          score += (tokenHits / queryTokens.length) * 50;
+        }
+
+        // 4. 摘要关键词命中打分
+        try {
+          const matches = (snippetLower.match(new RegExp(escapeRegExp(lowerQuery), 'g')) || []).length;
+          score += Math.min(matches * 10, 40);
+        } catch (e) {
+          if (snippetLower.includes(lowerQuery)) score += 10;
+        }
+
+        // 5. 权威直达主域名加权 (如直接是 .net/.com/.cn 首页)
+        try {
+          const parsed = new URL(item.url);
+          if (parsed.pathname === "/" || parsed.pathname === "") {
+            score += 40; // 首页直达优先级高于子页面
+          }
+        } catch (e) {}
+
+        // 6. 百科类词条若只是泛泛而谈，轻微降权（避免百科压制具体工具）
+        if (item.source.includes("维基百科") && !item.isDirectTool) {
+          score -= 15;
+        }
+
+        return {
+          ...item,
+          score: Math.round(score)
+        };
+      });
+
+      // 从高到低排序
+      return scored.sort((a, b) => b.score - a.score);
+    }
+
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    /**
+     * 【渲染搜索结果】
+     */
+    function renderResults(results, query) {
+      const container = document.getElementById("resultsContainer");
+      container.innerHTML = "";
+
+      results.forEach((item, index) => {
+        const card = document.createElement("article");
+        card.className = "result-card" + (item.isDirectTool ? " tool-direct" : "");
+        card.style.animationDelay = `${index * 0.04}s`;
+
+        const highlightedTitle = highlightText(item.title, query);
+        const highlightedSnippet = highlightText(item.snippet, query);
+        const badgeClass = item.isDirectTool ? "badge-source badge-direct" : "badge-source";
+
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="${badgeClass}">${item.source}</span>
+            <span class="badge-score">相关度: ${item.score}分</span>
+          </div>
+          <h2 class="result-title">
+            <a href="${item.url}" target="_blank" rel="noopener noreferrer">${highlightedTitle}</a>
+          </h2>
+          <div class="result-url">${item.url}</div>
+          <p class="result-snippet">${highlightedSnippet}</p>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function highlightText(text, query) {
+      if (!query || !text) return text;
+      const lowerQuery = query.trim();
+      if (!lowerQuery) return text;
+      try {
+        const regex = new RegExp(`(${escapeRegExp(lowerQuery)})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
+      } catch (e) {
+        return text;
+      }
+    }
+  </script>
+</body>
+</html>
