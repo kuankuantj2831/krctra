@@ -70,23 +70,38 @@ async function fetchBing(query) {
     const html = await resp.text();
     const results = [];
 
-    // 正则提取 Bing 条目: <li class="b_algo">...<h2><a href="...">标题</a></h2>...<p>摘要</p>...
-    const algoRegex = /<li class="b_algo"[\s\S]*?<\/li>/gi;
+    // 正则提取 Bing 条目: <li class="b_algo"...
+    // 现代 Bing 的 <h2> 经常带有 class=""，且外层可能包裹 div
+    const algoRegex = /<li\s+class="b_algo"[^>]*>([\s\S]*?)<\/li>/gi;
     let match;
 
     while ((match = algoRegex.exec(html)) !== null && results.length < 10) {
-      const block = match[0];
+      const block = match[1];
 
-      // 提取链接和标题
-      const linkMatch = /<h2>\s*<a\s+[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>\s*<\/h2>/i.exec(block);
+      // 提取 h2 下的链接和标题: <h2[^>]*><a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>
+      const linkMatch = /<h2[^>]*>\s*<a\s+[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
       if (!linkMatch) continue;
 
-      const rawHref = linkMatch[1];
+      let rawHref = linkMatch[1];
       const rawTitle = cleanHtml(linkMatch[2]);
 
-      // 提取摘要: class="b_caption" 或 <p>
+      // 处理 Bing 的重定向链接: /ck/a?!&&p=...&u=a1aHR0cHM6Ly9...
+      if (rawHref.includes('&u=')) {
+        try {
+          const uParam = rawHref.split('&u=')[1].split('&')[0];
+          // u 参数是以 a1 开头的 Base64 编码 (a1 + base64(url))
+          const b64 = uParam.startsWith('a1') ? uParam.slice(2) : uParam;
+          const decoded = atob(b64);
+          if (decoded.startsWith('http')) {
+            rawHref = decoded;
+          }
+        } catch (err) {}
+      }
+
+      // 提取摘要: 寻找 class 包含 b_caption 或 <p> 标签
       let rawSnippet = '';
-      const snippetMatch = /<p[^>]*>([\s\S]*?)<\/p>/i.exec(block);
+      const snippetMatch = /<div\s+class="b_caption"[\s\S]*?<p[^>]*>([\s\S]*?)<\/p>/i.exec(block) 
+                        || /<p[^>]*>([\s\S]*?)<\/p>/i.exec(block);
       if (snippetMatch) {
         rawSnippet = cleanHtml(snippetMatch[1]);
       }
@@ -95,7 +110,7 @@ async function fetchBing(query) {
         results.push({
           id: `bing-${Math.random()}`,
           title: rawTitle,
-          snippet: rawSnippet || '无详细摘要',
+          snippet: rawSnippet || '必应网页结果',
           url: rawHref,
           source: 'Bing 网页搜索'
         });
