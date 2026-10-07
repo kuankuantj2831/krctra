@@ -5,9 +5,174 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Krctra - 极简纯净搜索引擎</title>
   <style>
+  <style>
     /* ----------------------------------------------------
-       1. 全局与主题样式：流光动态渐变背景、现代字体
+       1. 全局与主题样式：支持多种背景色切换、自定义背景图片与默认纯白极简
        ---------------------------------------------------- */
+    :root {
+      /* 默认纯白主题 (Light / Pure White) - 舒适护眼，简洁明快 */
+      --bg-color: #f8fafc;
+      --bg-gradient: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --brand-title-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #db2777 100%);
+      --brand-text-shadow: 0 4px 20px rgba(124, 58, 237, 0.15);
+      
+      --search-bg: rgba(255, 255, 255, 0.9);
+      --search-border: rgba(203, 213, 225, 0.8);
+      --search-border-focus: #7c3aed;
+      --search-shadow: 0 8px 24px rgba(148, 163, 184, 0.25);
+      --search-input-color: #0f172a;
+      
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-border: rgba(226, 232, 240, 0.9);
+      --card-border-hover: rgba(168, 85, 247, 0.45);
+      --card-shadow: 0 4px 18px rgba(148, 163, 184, 0.16);
+      --card-title-color: #1d4ed8;
+      --card-title-hover: #2563eb;
+      --card-url-color: #059669;
+      --card-snippet-color: #334155;
+      --card-snippet-mark-bg: rgba(253, 224, 71, 0.65);
+      --card-snippet-mark-color: #713f12;
+
+      --modal-bg: rgba(255, 255, 255, 0.98);
+      --modal-border: rgba(226, 232, 240, 0.9);
+      --modal-title-color: #0f172a;
+      --source-item-bg: rgba(241, 245, 249, 0.7);
+      --source-item-border: rgba(226, 232, 240, 0.8);
+
+      --banner-bg: rgba(255, 255, 255, 0.96);
+      --banner-border: rgba(168, 85, 247, 0.4);
+      --banner-content-bg: #f8fafc;
+      --banner-content-color: #0f172a;
+      --banner-shadow: 0 10px 30px rgba(124, 58, 237, 0.12);
+    }
+
+    /* 深邃暗夜紫 (Dark Purple) 主题 */
+    body.theme-purple {
+      --bg-color: #0f172a;
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 35%, #311042 70%, #0f172a 100%);
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --brand-title-gradient: linear-gradient(120deg, #60a5fa, #c084fc, #f472b6);
+      --brand-text-shadow: 0 0 35px rgba(192, 132, 252, 0.35);
+
+      --search-bg: rgba(255, 255, 255, 0.08);
+      --search-border: rgba(255, 255, 255, 0.15);
+      --search-border-focus: rgba(192, 132, 252, 0.7);
+      --search-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      --search-input-color: #ffffff;
+
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-border-hover: rgba(168, 85, 247, 0.35);
+      --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      --card-title-color: #67e8f9;
+      --card-title-hover: #a5f3fc;
+      --card-url-color: #10b981;
+      --card-snippet-color: #cbd5e1;
+      --card-snippet-mark-bg: rgba(244, 114, 182, 0.3);
+      --card-snippet-mark-color: #fbcfe8;
+
+      --modal-bg: rgba(30, 27, 75, 0.96);
+      --modal-border: rgba(255, 255, 255, 0.16);
+      --modal-title-color: #f8fafc;
+      --source-item-bg: rgba(255, 255, 255, 0.04);
+      --source-item-border: rgba(255, 255, 255, 0.08);
+
+      --banner-bg: rgba(30, 27, 75, 0.88);
+      --banner-border: rgba(168, 85, 247, 0.45);
+      --banner-content-bg: rgba(15, 23, 42, 0.6);
+      --banner-content-color: #f1f5f9;
+      --banner-shadow: 0 12px 35px rgba(147, 51, 234, 0.22);
+    }
+
+    /* 优雅暗黑墨黑 (Dark Clean) 主题 */
+    body.theme-dark {
+      --bg-color: #121212;
+      --bg-gradient: linear-gradient(180deg, #18181b 0%, #09090b 100%);
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --brand-title-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      --brand-text-shadow: 0 4px 25px rgba(56, 189, 248, 0.2);
+
+      --search-bg: rgba(255, 255, 255, 0.06);
+      --search-border: rgba(255, 255, 255, 0.12);
+      --search-border-focus: #38bdf8;
+      --search-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      --search-input-color: #ffffff;
+
+      --card-bg: rgba(24, 24, 27, 0.8);
+      --card-border: rgba(255, 255, 255, 0.09);
+      --card-border-hover: rgba(56, 189, 248, 0.4);
+      --card-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+      --card-title-color: #38bdf8;
+      --card-title-hover: #7dd3fc;
+      --card-url-color: #34d399;
+      --card-snippet-color: #d4d4d8;
+      --card-snippet-mark-bg: rgba(56, 189, 248, 0.25);
+      --card-snippet-mark-color: #bae6fd;
+
+      --modal-bg: rgba(24, 24, 27, 0.96);
+      --modal-border: rgba(255, 255, 255, 0.12);
+      --modal-title-color: #fafafa;
+      --source-item-bg: rgba(255, 255, 255, 0.04);
+      --source-item-border: rgba(255, 255, 255, 0.08);
+
+      --banner-bg: rgba(24, 24, 27, 0.9);
+      --banner-border: rgba(56, 189, 248, 0.4);
+      --banner-content-bg: #09090b;
+      --banner-content-color: #fafafa;
+      --banner-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    }
+
+    /* 清爽天蓝护眼 (Ocean Blue) 主题 */
+    body.theme-blue {
+      --bg-color: #f0f9ff;
+      --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #f0fdf4 100%);
+      --text-main: #0c4a6e;
+      --text-muted: #475569;
+      --brand-title-gradient: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
+      --brand-text-shadow: 0 4px 20px rgba(2, 132, 199, 0.15);
+
+      --search-bg: rgba(255, 255, 255, 0.92);
+      --search-border: rgba(186, 230, 253, 0.9);
+      --search-border-focus: #0284c7;
+      --search-shadow: 0 8px 24px rgba(186, 230, 253, 0.4);
+      --search-input-color: #0369a1;
+
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --card-border: rgba(224, 242, 254, 0.9);
+      --card-border-hover: rgba(2, 132, 199, 0.4);
+      --card-shadow: 0 4px 18px rgba(186, 230, 253, 0.25);
+      --card-title-color: #0284c7;
+      --card-title-hover: #0369a1;
+      --card-url-color: #059669;
+      --card-snippet-color: #334155;
+      --card-snippet-mark-bg: rgba(186, 230, 253, 0.7);
+      --card-snippet-mark-color: #0369a1;
+
+      --modal-bg: rgba(255, 255, 255, 0.98);
+      --modal-border: rgba(186, 230, 253, 0.8);
+      --modal-title-color: #0c4a6e;
+      --source-item-bg: rgba(240, 249, 255, 0.8);
+      --source-item-border: rgba(224, 242, 254, 0.9);
+
+      --banner-bg: rgba(255, 255, 255, 0.95);
+      --banner-border: rgba(2, 132, 199, 0.4);
+      --banner-content-bg: #f0f9ff;
+      --banner-content-color: #0c4a6e;
+      --banner-shadow: 0 10px 25px rgba(2, 132, 199, 0.15);
+    }
+
+    /* 自定义上传图片背景状态 */
+    body.has-custom-bg {
+      background-size: cover !important;
+      background-position: center center !important;
+      background-repeat: no-repeat !important;
+      background-attachment: fixed !important;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -17,14 +182,19 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       min-height: 100vh;
-      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 35%, #311042 70%, #0f172a 100%);
-      background-size: 300% 300%;
-      animation: gradientBG 15s ease infinite;
-      color: #e2e8f0;
+      background: var(--bg-gradient);
+      background-color: var(--bg-color);
+      color: var(--text-main);
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 40px 20px 60px 20px;
+      transition: background 0.4s ease, color 0.3s ease;
+    }
+
+    body.theme-purple {
+      background-size: 300% 300%;
+      animation: gradientBG 15s ease infinite;
     }
 
     @keyframes gradientBG {
@@ -46,10 +216,10 @@
       font-size: 3.8rem;
       font-weight: 800;
       letter-spacing: -1.5px;
-      background: linear-gradient(120deg, #60a5fa, #c084fc, #f472b6);
+      background: var(--brand-title-gradient);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 35px rgba(192, 132, 252, 0.35);
+      text-shadow: var(--brand-text-shadow);
       user-select: none;
       cursor: default;
       transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -61,7 +231,7 @@
 
     .brand-subtitle {
       font-size: 0.95rem;
-      color: #94a3b8;
+      color: var(--text-muted);
       margin-top: 6px;
       letter-spacing: 1px;
     }
@@ -80,22 +250,19 @@
       width: 100%;
       display: flex;
       align-items: center;
-      background: rgba(255, 255, 255, 0.08);
+      background: var(--search-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      border: 1.5px solid var(--search-border);
       border-radius: 9999px;
       padding: 6px 10px 6px 22px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3),
-                  inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      box-shadow: var(--search-shadow), inset 0 1px 1px rgba(255, 255, 255, 0.1);
       transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .search-box:focus-within {
-      background: rgba(255, 255, 255, 0.13);
-      border-color: rgba(192, 132, 252, 0.7);
-      box-shadow: 0 15px 35px -5px rgba(168, 85, 247, 0.3),
-                  0 0 0 4px rgba(168, 85, 247, 0.15);
+      border-color: var(--search-border-focus);
+      box-shadow: 0 12px 30px rgba(124, 58, 237, 0.25), 0 0 0 3px rgba(124, 58, 237, 0.15);
       transform: translateY(-2px);
     }
 
@@ -105,12 +272,12 @@
       border: none;
       outline: none;
       font-size: 1.1rem;
-      color: #ffffff;
+      color: var(--search-input-color);
       padding: 10px 8px;
     }
 
     .search-input::placeholder {
-      color: #64748b;
+      color: var(--text-muted);
     }
 
     .search-btn {
@@ -149,26 +316,24 @@
       width: 44px;
       height: 44px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #cbd5e1;
+      background: var(--search-bg);
+      border: 1px solid var(--search-border);
+      color: var(--text-main);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+      box-shadow: var(--search-shadow);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       z-index: 1000;
       outline: none;
     }
 
     .top-settings-btn:hover {
-      background: rgba(255, 255, 255, 0.18);
-      color: #ffffff;
       transform: rotate(45deg) scale(1.08);
-      border-color: rgba(192, 132, 252, 0.6);
+      border-color: var(--search-border-focus);
       box-shadow: 0 6px 20px rgba(168, 85, 247, 0.35);
     }
 
@@ -185,7 +350,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(15, 23, 42, 0.7);
+      background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       z-index: 1001;
@@ -204,14 +369,17 @@
 
     .settings-modal {
       width: 90%;
-      max-width: 520px;
-      background: rgba(30, 27, 75, 0.95);
-      border: 1.5px solid rgba(255, 255, 255, 0.16);
+      max-width: 540px;
+      max-height: 85vh;
+      overflow-y: auto;
+      background: var(--modal-bg);
+      border: 1.5px solid var(--modal-border);
       border-radius: 20px;
-      padding: 26px 28px;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+      padding: 24px 26px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
       transform: translateY(20px) scale(0.96);
       transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      color: var(--text-main);
     }
 
     .settings-modal-overlay.open .settings-modal {
@@ -222,15 +390,15 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 14px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 12px;
     }
 
     .modal-title {
       font-size: 1.2rem;
       font-weight: 700;
-      color: #f8fafc;
+      color: var(--modal-title-color);
       display: flex;
       align-items: center;
       gap: 10px;
@@ -239,7 +407,7 @@
     .modal-close-btn {
       background: transparent;
       border: none;
-      color: #94a3b8;
+      color: var(--text-muted);
       cursor: pointer;
       font-size: 1.5rem;
       line-height: 1;
@@ -249,15 +417,119 @@
     }
 
     .modal-close-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(148, 163, 184, 0.15);
+      color: var(--text-main);
+    }
+
+    .settings-section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 16px 0 10px 0;
+      color: var(--modal-title-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 主题与壁纸切换选择器 */
+    .theme-palette-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .theme-chip {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 6px;
+      border-radius: 12px;
+      border: 2px solid var(--card-border);
+      background: var(--source-item-bg);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .theme-chip:hover {
+      transform: translateY(-2px);
+      border-color: var(--card-border-hover);
+    }
+
+    .theme-chip.active {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.25);
+    }
+
+    .theme-color-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .theme-chip-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .custom-bg-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--source-item-bg);
+      border: 1px solid var(--source-item-border);
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+    }
+
+    .custom-bg-btn {
+      background: rgba(124, 58, 237, 0.15);
+      color: #7c3aed;
+      border: 1px solid rgba(124, 58, 237, 0.35);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .custom-bg-btn:hover {
+      background: #7c3aed;
       color: #ffffff;
+    }
+
+    .custom-bg-btn-clear {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .custom-bg-btn-clear:hover {
+      color: #ef4444;
+      border-color: #ef4444;
+    }
+
+    .custom-bg-tip {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      flex: 1;
     }
 
     .settings-sources-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      margin-bottom: 22px;
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
     .source-item {
@@ -266,13 +538,13 @@
       justify-content: space-between;
       padding: 10px 14px;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: var(--source-item-bg);
+      border: 1px solid var(--source-item-border);
       transition: background 0.2s ease;
     }
 
     .source-item:hover {
-      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--card-border-hover);
     }
 
     .source-info {
@@ -284,12 +556,12 @@
     .source-name {
       font-size: 0.95rem;
       font-weight: 600;
-      color: #f1f5f9;
+      color: var(--text-main);
     }
 
     .source-desc {
       font-size: 0.8rem;
-      color: #94a3b8;
+      color: var(--text-muted);
     }
 
     .source-item input[type="checkbox"] {
@@ -323,7 +595,7 @@
        ---------------------------------------------------- */
     .status-msg {
       text-align: center;
-      color: #94a3b8;
+      color: var(--text-muted);
       font-size: 0.95rem;
       min-height: 24px;
       margin-bottom: 20px;
@@ -333,9 +605,9 @@
       display: inline-block;
       width: 18px;
       height: 18px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      border: 2px solid rgba(148, 163, 184, 0.3);
       border-radius: 50%;
-      border-top-color: #c084fc;
+      border-top-color: #7c3aed;
       animation: spin 0.8s linear infinite;
       vertical-align: middle;
       margin-right: 8px;
@@ -357,29 +629,28 @@
     }
 
     .result-card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 16px;
       padding: 20px;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: var(--card-shadow);
       opacity: 0;
       transform: translateY(18px);
       animation: fadeInCard 0.45s ease forwards;
-      transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+      transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
     }
 
     .result-card.tool-direct {
-      border: 1px solid rgba(52, 211, 153, 0.4);
-      background: rgba(16, 185, 129, 0.08);
+      border: 1.5px solid rgba(16, 185, 129, 0.5);
+      background: rgba(16, 185, 129, 0.06);
     }
 
     .result-card:hover {
       transform: translateY(-3px);
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(168, 85, 247, 0.35);
-      box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.25);
+      border-color: var(--card-border-hover);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
     }
 
     @keyframes fadeInCard {
@@ -400,21 +671,21 @@
       font-size: 0.75rem;
       padding: 2px 8px;
       border-radius: 6px;
-      background: rgba(99, 102, 241, 0.25);
-      color: #a5b4fc;
-      border: 1px solid rgba(99, 102, 241, 0.35);
+      background: rgba(99, 102, 241, 0.15);
+      color: #6366f1;
+      border: 1px solid rgba(99, 102, 241, 0.3);
     }
 
     .badge-source.badge-direct {
-      background: rgba(16, 185, 129, 0.25);
-      color: #6ee7b7;
-      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.15);
+      color: #059669;
+      border-color: rgba(16, 185, 129, 0.35);
     }
 
     .badge-score {
       font-size: 0.75rem;
-      color: #34d399;
-      background: rgba(52, 211, 153, 0.15);
+      color: #059669;
+      background: rgba(16, 185, 129, 0.12);
       padding: 2px 8px;
       border-radius: 6px;
     }
@@ -426,19 +697,19 @@
     }
 
     .result-title a {
-      color: #67e8f9;
+      color: var(--card-title-color);
       text-decoration: none;
       transition: color 0.2s ease;
     }
 
     .result-title a:hover {
-      color: #a5f3fc;
+      color: var(--card-title-hover);
       text-decoration: underline;
     }
 
     .result-url {
       font-size: 0.8rem;
-      color: #10b981;
+      color: var(--card-url-color);
       margin-bottom: 6px;
       word-break: break-all;
     }
@@ -446,12 +717,12 @@
     .result-snippet {
       font-size: 0.95rem;
       line-height: 1.6;
-      color: #cbd5e1;
+      color: var(--card-snippet-color);
     }
 
     .result-snippet mark {
-      background-color: rgba(244, 114, 182, 0.3);
-      color: #fbcfe8;
+      background-color: var(--card-snippet-mark-bg);
+      color: var(--card-snippet-mark-color);
       border-radius: 2px;
       padding: 1px 3px;
     }
@@ -463,13 +734,13 @@
       width: 100%;
       max-width: 720px;
       margin: 0 auto 24px auto;
-      background: rgba(30, 27, 75, 0.85);
-      border: 1.5px solid rgba(168, 85, 247, 0.45);
+      background: var(--banner-bg);
+      border: 1.5px solid var(--banner-border);
       border-radius: 18px;
       padding: 18px 22px;
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      box-shadow: 0 12px 35px rgba(147, 51, 234, 0.22), 0 4px 15px rgba(0, 0, 0, 0.3);
+      box-shadow: var(--banner-shadow);
       animation: fadeInDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       display: none;
     }
@@ -495,7 +766,7 @@
       justify-content: space-between;
       margin-bottom: 12px;
       padding-bottom: 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid var(--card-border);
     }
 
     .decrypt-badge {
@@ -504,17 +775,17 @@
       gap: 6px;
       font-size: 0.85rem;
       font-weight: 600;
-      color: #c084fc;
-      background: rgba(192, 132, 252, 0.15);
+      color: #7c3aed;
+      background: rgba(124, 58, 237, 0.12);
       padding: 4px 12px;
       border-radius: 20px;
-      border: 1px solid rgba(192, 132, 252, 0.3);
+      border: 1px solid rgba(124, 58, 237, 0.25);
     }
 
     .decrypt-close {
       background: transparent;
       border: none;
-      color: #94a3b8;
+      color: var(--text-muted);
       cursor: pointer;
       font-size: 1.25rem;
       line-height: 1;
@@ -524,16 +795,16 @@
     }
 
     .decrypt-close:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: #ffffff;
+      background: rgba(148, 163, 184, 0.15);
+      color: var(--text-main);
     }
 
     .decrypt-content-box {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--banner-content-bg);
+      border: 1px solid var(--card-border);
       border-radius: 12px;
       padding: 12px 16px;
-      color: #f1f5f9;
+      color: var(--banner-content-color);
       font-size: 0.95rem;
       line-height: 1.6;
       word-break: break-all;
@@ -655,9 +926,53 @@
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
-          <span>搜索引擎设置</span>
+          <span>偏好与个性化设置</span>
         </div>
         <button type="button" class="modal-close-btn" id="closeSettingsBtn" title="关闭">&times;</button>
+      </div>
+
+      <!-- 个性化外观与背景色设置 -->
+      <div class="settings-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 2a10 10 0 0 0 0 20z"></path>
+        </svg>
+        <span>背景外观风格</span>
+      </div>
+
+      <div class="theme-palette-grid">
+        <div class="theme-chip active" data-theme="white">
+          <div class="theme-color-dot" style="background: #ffffff; border: 1.5px solid #cbd5e1;"></div>
+          <span class="theme-chip-label">默认纯白</span>
+        </div>
+        <div class="theme-chip" data-theme="blue">
+          <div class="theme-color-dot" style="background: linear-gradient(135deg, #e0f2fe, #bae6fd);"></div>
+          <span class="theme-chip-label">清爽天蓝</span>
+        </div>
+        <div class="theme-chip" data-theme="purple">
+          <div class="theme-color-dot" style="background: linear-gradient(135deg, #1e1b4b, #311042);"></div>
+          <span class="theme-chip-label">暗夜流光</span>
+        </div>
+        <div class="theme-chip" data-theme="dark">
+          <div class="theme-color-dot" style="background: #18181b;"></div>
+          <span class="theme-chip-label">深邃暗黑</span>
+        </div>
+      </div>
+
+      <!-- 自定义上传背景图片 -->
+      <div class="custom-bg-controls">
+        <input type="file" id="bgFileInput" accept="image/*" style="display: none;">
+        <button type="button" class="custom-bg-btn" id="uploadBgBtn">上传自定义背景图</button>
+        <button type="button" class="custom-bg-btn-clear" id="clearBgBtn" style="display: none;">清除壁纸</button>
+        <span class="custom-bg-tip" id="bgStatusTip">支持各种本地壁纸图片</span>
+      </div>
+
+      <!-- 搜索引擎数据源设置 -->
+      <div class="settings-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <span>搜索数据源</span>
       </div>
 
       <div class="settings-sources-list">
@@ -854,6 +1169,121 @@
       { id: "srcWiki", defaultVal: false },
       { id: "srcOpenLib", defaultVal: false }
     ];
+
+    /* ==========================================================================
+       【多主题与自定义背景壁纸管理系统】
+       默认采用舒适纯白护眼风格，并提供清爽蓝、暗夜流光紫、深邃黑及自定义图片上传
+       ========================================================================== */
+    let currentTheme = "white"; // 默认纯白
+
+    function applyTheme(themeName) {
+      currentTheme = themeName;
+      document.body.classList.remove("theme-purple", "theme-dark", "theme-blue");
+
+      if (themeName === "purple") {
+        document.body.classList.add("theme-purple");
+      } else if (themeName === "dark") {
+        document.body.classList.add("theme-dark");
+      } else if (themeName === "blue") {
+        document.body.classList.add("theme-blue");
+      }
+      // white 为默认根变量无需额外加 class
+
+      // 更新主题选项的高亮状态
+      document.querySelectorAll(".theme-chip").forEach(chip => {
+        if (chip.getAttribute("data-theme") === themeName) {
+          chip.classList.add("active");
+        } else {
+          chip.classList.remove("active");
+        }
+      });
+
+      try {
+        localStorage.setItem("krctra_theme", themeName);
+      } catch (e) {}
+    }
+
+    // 自定义壁纸应用
+    function applyCustomBackground(imageDataUrl) {
+      if (imageDataUrl) {
+        document.body.style.backgroundImage = `url("${imageDataUrl}")`;
+        document.body.classList.add("has-custom-bg");
+        document.getElementById("clearBgBtn").style.display = "inline-block";
+        document.getElementById("bgStatusTip").textContent = "已应用自定义壁纸";
+      } else {
+        document.body.style.backgroundImage = "";
+        document.body.classList.remove("has-custom-bg");
+        document.getElementById("clearBgBtn").style.display = "none";
+        document.getElementById("bgStatusTip").textContent = "支持各种本地壁纸图片";
+      }
+    }
+
+    // 加载已保存的主题与壁纸
+    function loadSavedAppearance() {
+      try {
+        const savedTheme = localStorage.getItem("krctra_theme") || "white";
+        applyTheme(savedTheme);
+
+        const savedBg = localStorage.getItem("krctra_custom_bg");
+        if (savedBg) {
+          applyCustomBackground(savedBg);
+        }
+      } catch (e) {
+        applyTheme("white");
+      }
+    }
+
+    // 主题切换点击事件
+    document.querySelectorAll(".theme-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        const theme = chip.getAttribute("data-theme");
+        applyTheme(theme);
+      });
+    });
+
+    // 自定义背景图片上传控制
+    const uploadBgBtn = document.getElementById("uploadBgBtn");
+    const bgFileInput = document.getElementById("bgFileInput");
+    const clearBgBtn = document.getElementById("clearBgBtn");
+
+    uploadBgBtn.addEventListener("click", () => {
+      bgFileInput.click();
+    });
+
+    bgFileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith("image/")) {
+        alert("请选择图片格式的文件哦！");
+        return;
+      }
+
+      // 如果图片过大提醒压缩并转为 Base64 存储
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const base64Data = evt.target.result;
+        try {
+          localStorage.setItem("krctra_custom_bg", base64Data);
+        } catch (storageErr) {
+          // localStorage 超出配额时仅在内存生效
+          console.warn("图片较大，已在当前会话生效");
+        }
+        applyCustomBackground(base64Data);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // 清除自定义壁纸，恢复当前主题默认色彩
+    clearBgBtn.addEventListener("click", () => {
+      try {
+        localStorage.removeItem("krctra_custom_bg");
+      } catch (e) {}
+      bgFileInput.value = "";
+      applyCustomBackground(null);
+    });
+
+    loadSavedAppearance();
 
     // 初始化/加载用户本地设置
     function loadSavedSettings() {
