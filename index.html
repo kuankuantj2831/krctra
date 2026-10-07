@@ -1958,6 +1958,21 @@
       const q = query.toLowerCase().trim();
       const matched = [];
 
+      // 0. 如果用户输入的是明确的网址/域名（例如 kuankuantj.com 或 https://...）
+      const cleanDomain = q.replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim();
+      const isDomainPattern = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/i.test(q);
+      if (isDomainPattern || q.startsWith('http://') || q.startsWith('https://')) {
+        const targetUrl = q.startsWith('http') ? q : ('https://' + q);
+        matched.push({
+          id: 'direct-domain-' + Date.now(),
+          title: cleanDomain + ' - 网址一键直达',
+          snippet: '检测到目标网址 "' + q + '"，点击即可直接前往访问该网站或首页。',
+          url: targetUrl,
+          source: '网址一键直达',
+          isDirectTool: true
+        });
+      }
+
       for (const item of PRACTICAL_TOOLS_INDEX) {
         let isHit = false;
         // 关键词命中
@@ -2247,10 +2262,19 @@
           }
         } catch (e) {}
 
-        // 6. 百科类词条若只是泛泛而谈，轻微降权（避免百科压制具体工具）
-        // 7. 搜索引擎（如 Bing）既然真实返回了结果，给予保底展示分，绝不因严格分词导致0分清空
-        if (item.source.includes("Bing")) {
-          score = Math.max(score, 50);
+        // 6. 严苛相关度检查：如果既不匹配完整词，分词也未命中任何核心词，绝不给予保底分！
+        // 提取有效分词（过滤纯后缀如 com, cn, net）
+        const domainSuffixes = new Set(['com', 'cn', 'net', 'org', 'cc', 'io', 'top', 'xyz', 'gov', 'edu', 'me']);
+        const meaningfulTokens = queryTokens.filter(t => !domainSuffixes.has(t) && t.length >= 2);
+
+        const isQueryMatched = titleLower.includes(lowerQuery) || snippetLower.includes(lowerQuery) || urlLower.includes(lowerQuery);
+        const isMeaningfulHit = meaningfulTokens.length > 0 && meaningfulTokens.some(t => titleLower.includes(t) || snippetLower.includes(t) || urlLower.includes(t));
+
+        if (!item.isDirectTool && !isQueryMatched && !isMeaningfulHit) {
+          // 纯粹毫无关系的垃圾或泛推结果，直接归零彻底过滤！
+          score = 0;
+        } else if (item.source.includes("Bing") && score > 0) {
+          score += 20;
         }
 
         return {
