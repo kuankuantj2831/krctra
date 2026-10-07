@@ -791,64 +791,160 @@
     };
 
     /**
-     * 【多维智能乱码清洗与特征信息提取算法】
-     * 针对各种乱码输入：
-     * 1. 剔除全角/半角标点噪声（如 `、，。！？；：“”‘’【】《》（）—·~@#$%^&*()_+=[]{}|;:'",.<>?/`）
-     * 2. 连续中文块提取（支持汉字+数字）
-     * 3. 英文实体与技术词识别（如 github, speedtest, npm, vue, react 等）
-     * 4. 拼音序列切分与语义还原（如果提取出的是拼音如 cesu，自动映射/还原为中文并保留拼音）
-     * 5. 特殊符号剥离（即使符号夹在中文或英文中间，也能自动拼合提取完整意图）
+     * =========================================================================
+     * 【三大乱码识别与有用信息提取算法系统】
+     * 针对用户提出的三项核心测试需求：
+     *  - 第一项：从中文乱码/胡乱打字中提取有用的高价值中文词语
+     *  - 第二项：从英文乱码/长串字母碎片中提取常用且有意义的英文词汇
+     *  - 第三项：从中英文、数字、特殊符号的严重混合体中选出有用词语组合
+     * =========================================================================
+     */
+
+    // 常用中文核心词库（涵盖日常生活、网络工具、科技、娱乐、游戏、知识）
+    const COMMON_CHINESE_WORDS = [
+      "测速", "网速", "网络测速", "宽带", "网络", "测试", "延迟",
+      "天气", "预报", "气温", "空气质量", "灾害预警",
+      "翻译", "在线翻译", "英翻中", "中翻英", "词典",
+      "地图", "导航", "路线", "公交", "高德",
+      "游戏", "棕色尘埃", "原神", "崩坏", "英雄联盟", "图鉴", "攻略", "下载",
+      "视频", "动漫", "音乐", "听歌", "社区", "论坛", "官网", "主页",
+      "代码", "开源", "编程", "开发", "软件", "应用", "工具", "计算器", "日历",
+      "科技", "新闻", "百科", "搜索", "引擎", "文档", "教程"
+    ];
+
+    // 常用高频英文核心词库（涵盖常用基础词、技术词汇、常用网站工具）
+    const COMMON_ENGLISH_WORDS = new Set([
+      "speed", "speedtest", "fast", "test", "network", "ping", "wifi",
+      "weather", "map", "maps", "translate", "trans", "dict",
+      "game", "games", "play", "download", "apk", "app", "pc", "news",
+      "code", "github", "git", "web", "tool", "tools", "calc", "calc",
+      "music", "video", "bilibili", "youtube", "google", "bing", "baidu",
+      "node", "npm", "vue", "react", "python", "java", "html", "css", "js",
+      "login", "home", "doc", "docs", "help", "guide", "free", "open", "api"
+    ]);
+
+    /**
+     * 第一项功能：从中文乱码或随意打字中提取有价值的词语
+     * 例如："asdfjh测速qwe" -> "测速"
+     * 例如："乱打字网络测速哈哈" -> "网络测速"
+     */
+    function extractChineseUsefulTerms(text) {
+      if (!text) return [];
+      const results = [];
+
+      // 1. 优先扫描预置的高价值中文词表（正向最大匹配）
+      for (const word of COMMON_CHINESE_WORDS) {
+        if (text.includes(word)) {
+          results.push(word);
+        }
+      }
+
+      // 2. 提取所有连续的汉字片段（过滤单字杂音，保留 2 个字以上的中文块）
+      const continuousChinese = text.match(/[\u4e00-\u9fa5]{2,}/g) || [];
+      for (const chunk of continuousChinese) {
+        // 如果没有被已收录的完整词覆盖，作为候选词放入
+        if (!results.some(w => w.includes(chunk) || chunk.includes(w))) {
+          results.push(chunk);
+        }
+      }
+
+      return results;
+    }
+
+    /**
+     * 第二项功能：从英文乱码/连打字母中提取常用英语词汇
+     * 例如："dfgspeedtestzx" -> 提取出 "speedtest"
+     * 例如："xxyyzzgithubaabb" -> 提取出 "github"
+     */
+    function extractEnglishUsefulTerms(text) {
+      if (!text) return [];
+      const results = [];
+      const lower = text.toLowerCase();
+
+      // 1. 在整串文本中滑动扫描是否包含高频常用英文词
+      for (const word of COMMON_ENGLISH_WORDS) {
+        if (lower.includes(word)) {
+          results.push(word);
+        }
+      }
+
+      // 2. 提取以字母构成的连续段落，如果本身长度适中且符合拼音词典
+      const letterBlocks = (lower.match(/[a-z]{2,}/g) || []);
+      for (const block of letterBlocks) {
+        if (COMMON_ENGLISH_WORDS.has(block)) {
+          if (!results.includes(block)) results.push(block);
+        } else if (PINYIN_COMMON_WORDS[block]) {
+          // 拼音识别
+          if (!results.includes(PINYIN_COMMON_WORDS[block])) {
+            results.push(PINYIN_COMMON_WORDS[block]);
+          }
+        }
+      }
+
+      return results;
+    }
+
+    /**
+     * 第三项功能：中英文、数字与符号混合检测与智能析取
+     * 彻底剥除各类符号噪声，保留有用的中文词、英文词、关键编号/版本（如 "棕色尘埃2", "win11"）
+     */
+    function extractHybridUsefulTerms(text) {
+      if (!text) return [];
+
+      // 提取中文+数字组合（例如 "棕色尘埃2"、"5G测速"、"4K视频"）
+      const alphaNumChinese = text.match(/[\u4e00-\u9fa5]+[0-9]+|[\u4e00-\u9fa50-9]{2,}/g) || [];
+
+      // 提取英文+数字组合（例如 "win11", "vue3", "ipv6"）
+      const alphaNumEnglish = text.match(/[a-zA-Z]+[0-9]+|[0-9]+[a-zA-Z]+/g) || [];
+
+      return [...alphaNumChinese, ...alphaNumEnglish];
+    }
+
+    /**
+     * 【主调度函数：综合多项乱码识别与清洗】
      */
     function cleanNoisyQuery(rawQuery) {
       if (!rawQuery) return { cleaned: "", isCleaned: false, original: "" };
       const original = rawQuery.trim();
 
-      // 阶段 1：清洗掉常见混杂干扰标点，得到去噪声干字符
-      // 匹配中英文标点、特殊符号、特殊数学字符
-      const strippedPunctuation = original.replace(/[\s\r\n\t`~!@#$%^&*()_\-+=\[\]{}|\\;:'",.<>?\/·~！@#￥%……&*（）——+={}|【】、：；“”‘’《》？，。]+/g, ' ').trim();
+      // 执行三项专门提取功能
+      const extractedChinese = extractChineseUsefulTerms(original);
+      const extractedEnglish = extractEnglishUsefulTerms(original);
+      const extractedHybrid  = extractHybridUsefulTerms(original);
 
-      // 阶段 2：提取所有有效中文文本段（如 "测速"、"棕色尘埃2"）
-      const chineseMatches = original.match(/[\u4e00-\u9fa5]+[0-9\u4e00-\u9fa5]*/g) || [];
+      const combinedSet = new Set();
 
-      // 阶段 3：提取所有连续英文字母串（如 "cesu", "github", "speedtest"）
-      const englishMatches = (original.match(/[a-zA-Z0-9]+/g) || []).filter(w => /[a-zA-Z]/.test(w) && w.length >= 2);
+      // 聚合所有有效项
+      extractedChinese.forEach(item => combinedSet.add(item));
+      extractedEnglish.forEach(item => combinedSet.add(item));
+      extractedHybrid.forEach(item => combinedSet.add(item));
 
-      // 阶段 4：拼音与语义还原识别
-      const pinyinDerivedWords = [];
-      for (const word of englishMatches) {
-        const lower = word.toLowerCase();
-        // 如果直接命中常见拼音词表
-        if (PINYIN_COMMON_WORDS[lower]) {
-          pinyinDerivedWords.push(PINYIN_COMMON_WORDS[lower]);
+      // 若三项算法找到了有效信息
+      if (combinedSet.size > 0) {
+        // 过滤子集重合项（例如如果已有“网络测速”，则无需多余列出“测速”）
+        const finalTerms = Array.from(combinedSet).sort((a, b) => b.length - a.length);
+        const filtered = [];
+        for (const term of finalTerms) {
+          if (!filtered.some(f => f !== term && f.includes(term))) {
+            filtered.push(term);
+          }
+        }
+
+        const cleanedStr = filtered.join(" ").trim();
+        if (cleanedStr && cleanedStr !== original) {
+          return {
+            cleaned: cleanedStr,
+            isCleaned: true,
+            original,
+            extractedList: filtered
+          };
         }
       }
 
-      // 阶段 5：智能多源汇总提取的有效信息
-      const collected = new Set();
-      
-      // 优先放入拼音还原的中文词
-      pinyinDerivedWords.forEach(w => collected.add(w));
-
-      // 放入提取到的真实中文
-      chineseMatches.forEach(w => {
-        if (w.trim()) collected.add(w.trim());
-      });
-
-      // 放入提取到的真实英文单词
-      englishMatches.forEach(w => {
-        if (w.trim()) collected.add(w.trim());
-      });
-
-      // 如果通过去除噪声符号后得到的串非常简洁有效
-      if (collected.size === 0 && strippedPunctuation.length > 0) {
-        collected.add(strippedPunctuation);
-      }
-
-      if (collected.size > 0) {
-        const cleanedStr = Array.from(collected).join(" ").trim();
-        if (cleanedStr !== original) {
-          return { cleaned: cleanedStr, isCleaned: true, original };
-        }
+      // 保底：去掉头尾符号标点
+      const fallback = original.replace(/^[\s`~!@#$%^&*()_\-+=\[\]{}|\\;:'",.<>?\/·~！@#￥%……&*（）——+={}|【】、：；“”‘’《》？，。]+|[\s`~!@#$%^&*()_\-+=\[\]{}|\\;:'",.<>?\/·~！@#￥%……&*（）——+={}|【】、：；“”‘’《》？，。]+$/g, '').trim();
+      if (fallback && fallback !== original) {
+        return { cleaned: fallback, isCleaned: true, original };
       }
 
       return { cleaned: original, isCleaned: false, original };
