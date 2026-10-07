@@ -740,21 +740,56 @@
     });
 
     /**
+     * 【智能乱码清洗与核心关键词提取】
+     * 当用户输入的查询中包含无意义乱码（符号、乱序非字符等）但夹带正常中文或英文字符时：
+     * 1. 优先提取连续的中文块（如 "测速"、"棕色尘埃2"）
+     * 2. 提取有意义的英文词汇（如 "github"、"speedtest"、"react"）
+     * 3. 提取常见有效中英文组合
+     * 如果提取到了有效核心词，则使用核心词进行精准检索，并在页面友好提示用户。
+     */
+    function cleanNoisyQuery(rawQuery) {
+      if (!rawQuery) return { cleaned: "", isCleaned: false, original: "" };
+      const original = rawQuery.trim();
+
+      // 1. 提取所有中文字符序列（支持中文字符 + 可选连带数字）
+      const chineseMatches = original.match(/[\u4e00-\u9fa5]+[0-9\u4e00-\u9fa5]*/g) || [];
+
+      // 2. 提取所有有意义的英文单词（至少2个字母，如 speedtest, github, vue 等）
+      const englishMatches = original.match(/[a-zA-Z]{2,}(?:[-_][a-zA-Z0-9]+)*/g) || [];
+
+      // 3. 组合有效词元
+      const validTokens = [...chineseMatches, ...englishMatches];
+
+      if (validTokens.length > 0) {
+        const cleanedStr = validTokens.join(" ").trim();
+        // 如果原始串包含大量乱码符号（且有效串不同于原始串），标记为清洗状态
+        if (cleanedStr !== original) {
+          return { cleaned: cleanedStr, isCleaned: true, original };
+        }
+      }
+
+      return { cleaned: original, isCleaned: false, original };
+    }
+
+    /**
      * 【主搜索逻辑】
      * 严格遵守用户的开关设置，绝不强制调用用户不想看到的源！
      */
     async function handleSearch(event) {
       event.preventDefault();
 
-      const query = searchInputElem.value.trim();
+      const rawQuery = searchInputElem.value.trim();
       const statusMsg = document.getElementById("statusMsg");
       const resultsContainer = document.getElementById("resultsContainer");
 
-      if (!query) {
+      if (!rawQuery) {
         statusMsg.textContent = "请输入你想搜索的内容哦！";
         resultsContainer.innerHTML = "";
         return;
       }
+
+      // 智能提取乱码中夹带的真实中英文字符
+      const { cleaned: query, isCleaned, original } = cleanNoisyQuery(rawQuery);
 
       // 获取用户的开关配置
       const userSettings = {
@@ -794,13 +829,14 @@
 
         // 统计来源种类
         const sourceSet = new Set(scoredResults.map(r => r.source));
-        statusMsg.textContent = `共呈现 ${scoredResults.length} 条精选结果（汇聚自：${Array.from(sourceSet).join('、')}），已按相关度重排：`;
+        const cleanedNotice = isCleaned ? ` [已自动识别核心有效词: "${query}"]` : "";
+        statusMsg.textContent = `共呈现 ${scoredResults.length} 条精选结果（汇聚自：${Array.from(sourceSet).join('、')}）${cleanedNotice}，已按相关度重排：`;
 
         // 3. 渲染
         renderResults(scoredResults, query);
 
-        // 同步 URL 参数（如 ?q=关键词），刷新网页或复制链接时依然保留搜索结果！
-        syncUrlParam(query);
+        // 同步 URL 参数（保存原始输入便于回溯）
+        syncUrlParam(rawQuery);
 
       } catch (error) {
         console.error("搜索出错:", error);
