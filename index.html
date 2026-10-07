@@ -668,11 +668,57 @@
     const closeSettingsBtn = document.getElementById("closeSettingsBtn");
     const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 
+    const SETTING_KEYS = [
+      { id: "srcBing", defaultVal: true },
+      { id: "srcTools", defaultVal: true },
+      { id: "srcCrossref", defaultVal: true },
+      { id: "srcWebDev", defaultVal: true },
+      { id: "srcWiki", defaultVal: false },
+      { id: "srcOpenLib", defaultVal: false }
+    ];
+
+    // 初始化/加载用户本地设置
+    function loadSavedSettings() {
+      try {
+        const raw = localStorage.getItem("krctra_search_settings");
+        if (raw) {
+          const saved = JSON.parse(raw);
+          for (const item of SETTING_KEYS) {
+            const el = document.getElementById(item.id);
+            if (el && typeof saved[item.id] === "boolean") {
+              el.checked = saved[item.id];
+            }
+          }
+          return;
+        }
+      } catch (e) {}
+      // 默认勾选
+      for (const item of SETTING_KEYS) {
+        const el = document.getElementById(item.id);
+        if (el) el.checked = item.defaultVal;
+      }
+    }
+
+    // 保存设置到本地
+    function saveSettingsToStorage() {
+      try {
+        const toSave = {};
+        for (const item of SETTING_KEYS) {
+          const el = document.getElementById(item.id);
+          if (el) toSave[item.id] = el.checked;
+        }
+        localStorage.setItem("krctra_search_settings", JSON.stringify(toSave));
+      } catch (e) {}
+    }
+
+    loadSavedSettings();
+
     openSettingsBtn.addEventListener("click", () => {
       settingsModalOverlay.classList.add("open");
     });
 
     function closeSettingsModal() {
+      saveSettingsToStorage();
       settingsModalOverlay.classList.remove("open");
     }
 
