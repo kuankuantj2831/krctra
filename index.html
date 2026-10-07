@@ -1603,9 +1603,16 @@
       }
 
       // 3. 尝试标准/URL-Safe Base64 解码
-      // 检查是否形似 Base64 字符串（长度>=4，字符集正确）
+      // 必须具备明确的 Base64 特征，严禁将普通英文单词、网名（如 kuankuantj）误判为 Base64！
       const cleanB64 = text.replace(/[\r\n\s]/g, '');
-      if (/^[A-Za-z0-9+/_-]+={0,3}$/.test(cleanB64) && cleanB64.length >= 4 && cleanB64.length % 4 <= 2) {
+      const hasExplicitPadding = cleanB64.includes('=');
+      const hasBase64Symbols = /[+/_]/.test(cleanB64);
+      const hasMixedCaseAndDigits = /[a-z]/.test(cleanB64) && /[A-Z]/.test(cleanB64) && /[0-9]/.test(cleanB64);
+
+      // 如果只是纯普通英文单词或包含域名点号，绝不是 Base64！
+      const isPlainWord = /^[a-zA-Z]+$/.test(cleanB64) || /^[a-zA-Z0-9]+(\.[a-zA-Z]{2,})+$/.test(text);
+
+      if (!isPlainWord && (hasExplicitPadding || hasBase64Symbols || hasMixedCaseAndDigits) && /^[A-Za-z0-9+/_-]+={0,3}$/.test(cleanB64) && cleanB64.length >= 4) {
         try {
           let standardB64 = cleanB64.replace(/-/g, '+').replace(/_/g, '/');
           while (standardB64.length % 4 !== 0) standardB64 += '=';
@@ -1615,9 +1622,9 @@
           for (let i = 0; i < binaryStr.length; i++) {
             bytes[i] = binaryStr.charCodeAt(i);
           }
-          const decoded = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
-          // 确保解码后的结果有意义（避免随机二进制乱字符）
-          if (decoded && decoded.trim() && !/[\x00-\x08\x0E-\x1F]/.test(decoded) && decoded !== text) {
+          const decoded = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+          const hasSensibleContent = /[\u4e00-\u9fa5]/.test(decoded) || (/[a-zA-Z]{2,}/.test(decoded) && !/[^\x20-\x7E\u4e00-\u9fa5\r\n\t]/.test(decoded));
+          if (decoded && decoded.trim() && hasSensibleContent && decoded !== text) {
             return {
               type: "Base64 加密/编码",
               result: decoded
@@ -2172,11 +2179,17 @@
           score += 80;
         }
 
+        // 2.1 针对域名/URL 检索加权（如搜索 kuankuantj.com 或 github.com）
+        const urlLower = (item.url || "").toLowerCase();
+        if (urlLower.includes(lowerQuery)) {
+          score += 150;
+        }
+
         // 3. 多词分词覆盖度计算
         if (queryTokens.length > 1) {
           let tokenHits = 0;
           for (const token of queryTokens) {
-            if (titleLower.includes(token)) tokenHits++;
+            if (titleLower.includes(token) || urlLower.includes(token)) tokenHits++;
           }
           score += (tokenHits / queryTokens.length) * 50;
         }
@@ -2198,9 +2211,9 @@
         } catch (e) {}
 
         // 6. 百科类词条若只是泛泛而谈，轻微降权（避免百科压制具体工具）
-        // 7. 对搜索引擎外部结果给予保底相关分（如果标题或摘要命中分词），保证有意义
-        if (item.source.includes("Bing") && score > 0) {
-          score += 20;
+        // 7. 搜索引擎（如 Bing）既然真实返回了结果，给予保底展示分，绝不因严格分词导致0分清空
+        if (item.source.includes("Bing")) {
+          score = Math.max(score, 50);
         }
 
         return {
